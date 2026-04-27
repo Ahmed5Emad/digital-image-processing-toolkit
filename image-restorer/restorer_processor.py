@@ -92,32 +92,34 @@ def midpoint_filter(image, kernel_size=3):
     max_f = max_filter(image, kernel_size)
     return ((min_f.astype(np.float32) + max_f.astype(np.float32)) / 2).astype(np.uint8)
 
-def laplacian_sharpening(image, ddepth=cv2.CV_64F):
-    laplacian = cv2.Laplacian(image, ddepth)
-    abs_laplacian = cv2.convertScaleAbs(laplacian)
-    return abs_laplacian
+def laplacian_sharpening(image):
+    # Laplacian detects edges; add to original to sharpen
+    laplacian = cv2.Laplacian(image, cv2.CV_64F)
+    sharpened = image.astype(np.float64) - laplacian
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
 
-
-def sobel_sharpening(image, ddepth=cv2.CV_64F, dx=1, dy=1, ksize=3):
-    sobel_x = cv2.Sobel(image, ddepth, dx=dx, dy=0, ksize=ksize)
-    sobel_y = cv2.Sobel(image, ddepth, dx=0, dy=dy, ksize=ksize)
-    sobel = cv2.magnitude(sobel_x, sobel_y)
-    abs_sobel = cv2.convertScaleAbs(sobel)
-    return abs_sobel
+def sobel_sharpening(image, ksize=3):
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=ksize)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=ksize)
+    sobel = np.sqrt(sobel_x**2 + sobel_y**2)
+    sharpened = image.astype(np.float64) + sobel
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
 
 def prewitt_sharpening(image):
-    kernelx = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
-    kernely = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
-    img_prewittx = cv2.filter2D(image, -1, kernelx)
-    img_prewitty = cv2.filter2D(image, -1, kernely)
-    return cv2.addWeighted(img_prewittx, 0.5, img_prewitty, 0.5, 0)
+    kernelx = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]], dtype=np.float32)
+    kernely = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]], dtype=np.float32)
+    img_prewittx = cv2.filter2D(image.astype(np.float32), -1, kernelx)
+    img_prewitty = cv2.filter2D(image.astype(np.float32), -1, kernely)
+    sharpened = image.astype(np.float64) + np.sqrt(img_prewittx**2 + img_prewitty**2)
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
 
 def roberts_sharpening(image):
-    kernelx = np.array([[1, 0], [0, -1]])
-    kernely = np.array([[0, 1], [-1, 0]])
-    img_robertsx = cv2.filter2D(image, -1, kernelx)
-    img_robertsy = cv2.filter2D(image, -1, kernely)
-    return cv2.addWeighted(img_robertsx, 0.5, img_robertsy, 0.5, 0)
+    kernelx = np.array([[1, 0], [0, -1]], dtype=np.float32)
+    kernely = np.array([[0, 1], [-1, 0]], dtype=np.float32)
+    img_robertsx = cv2.filter2D(image.astype(np.float32), -1, kernelx)
+    img_robertsy = cv2.filter2D(image.astype(np.float32), -1, kernely)
+    sharpened = image.astype(np.float64) + np.sqrt(img_robertsx**2 + img_robertsy**2)
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
 
 def log_transformation(image):
     image_f = image.astype(np.float32)
@@ -144,6 +146,9 @@ def box_filter(image, kernel_size=5):
     return cv2.boxFilter(image, -1, (kernel_size, kernel_size))
 
 def butterworth_highpass_filter(image, cutoff=30, n=2):
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
     rows, cols = image.shape
     crow, ccol = rows // 2, cols // 2
     
@@ -163,4 +168,5 @@ def butterworth_highpass_filter(image, cutoff=30, n=2):
     img_back = np.fft.ifft2(dft_ishift)
     img_back = np.abs(img_back)
     
-    return np.clip(img_back, 0, 255).astype(np.uint8)
+    result = np.clip(img_back, 0, 255).astype(np.uint8)
+    return cv2.cvtColor(result, cv2.COLOR_GRAY2BGR) if len(image.shape) == 3 else result

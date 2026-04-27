@@ -65,6 +65,7 @@ class ImageRestorerGUI(QMainWindow):
 
         self.original_image = None
         self.current_image = None
+        self.history = []
 
         self.init_ui()
 
@@ -87,21 +88,25 @@ class ImageRestorerGUI(QMainWindow):
 
         sidebar_container = QWidget()
         sidebar_layout = QVBoxLayout(sidebar_container)
-        sidebar_layout.setContentsMargins(20, 30, 20, 30)
-        sidebar_layout.setSpacing(15)
+        sidebar_layout.setContentsMargins(10, 20, 0, 10)
+        sidebar_layout.setSpacing(10)
 
-        title = QLabel("IMAGE\nRESTORER")
+        title = QLabel("IMAGE RESTORER")
         title.setObjectName("title")
+        title.setStyleSheet("font-size: 24px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sidebar_layout.addWidget(title)
 
-        # Header with Save/Reset
+        sidebar_layout.addSpacing(5)
+
         header_layout = QHBoxLayout()
-        self.btn_save = ModernButton("Save")
+        self.btn_save = ModernButton("Save Image")
+        self.btn_save.setObjectName("save_btn")
         self.btn_save.clicked.connect(self.save_image)
         header_layout.addWidget(self.btn_save)
 
-        self.btn_reset = ModernButton("Reset")
+        self.btn_reset = ModernButton("Reset Image")
+        self.btn_reset.setObjectName("reset_btn")
         self.btn_reset.clicked.connect(self.reset_image)
         header_layout.addWidget(self.btn_reset)
         sidebar_layout.addLayout(header_layout)
@@ -120,7 +125,6 @@ class ImageRestorerGUI(QMainWindow):
                     sidebar_layout, name, self._make_callback(func))
 
         sidebar_layout.addStretch()
-
         sidebar_scroll.setWidget(sidebar_container)
 
         sidebar_main_layout = QVBoxLayout(sidebar)
@@ -129,9 +133,25 @@ class ImageRestorerGUI(QMainWindow):
 
         main_layout.addWidget(sidebar)
 
+        right_container = QWidget()
+        right_layout = QVBoxLayout(right_container)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+
+        top_bar = QHBoxLayout()
+        top_bar.setContentsMargins(0, 10, 10, 0)
+        top_bar.addStretch()
+
+        self.btn_undo = ModernButton("⟲")
+        self.btn_undo.setStyleSheet("font-size: 24px;")
+        self.btn_undo.setFixedSize(45, 45)
+        self.btn_undo.clicked.connect(self.undo_last_effect)
+
+        top_bar.addWidget(self.btn_undo)
+
+        right_layout.addLayout(top_bar)
+
         preview_container = QWidget()
         preview_layout = QHBoxLayout(preview_container)
-        preview_layout.setContentsMargins(10, 10, 10, 10)
 
         self.original_scroll = QScrollArea()
         self.original_scroll.setWidgetResizable(True)
@@ -151,7 +171,8 @@ class ImageRestorerGUI(QMainWindow):
 
         preview_layout.addWidget(self.original_scroll)
         preview_layout.addWidget(self.restored_scroll)
-        main_layout.addWidget(preview_container)
+        right_layout.addWidget(preview_container)
+        main_layout.addWidget(right_container)
 
     def add_section_label(self, layout, text):
         label = QLabel(text)
@@ -187,14 +208,22 @@ class ImageRestorerGUI(QMainWindow):
     def apply_effect(self, effect_func):
         if self.current_image is not None:
             try:
+                self.history.append(self.current_image.copy())
                 self.current_image = effect_func(self.current_image)
                 self.update_preview()
             except Exception as e:
                 print(f"Error applying effect: {e}")
+                self.history.pop()
+
+    def undo_last_effect(self):
+        if self.history:
+            self.current_image = self.history.pop()
+            self.update_preview()
 
     def reset_image(self):
         if self.original_image is not None:
             self.current_image = self.original_image.copy()
+            self.history = []
             self.update_preview()
 
     def _display_image(self, image, label, scroll_area):
@@ -203,14 +232,16 @@ class ImageRestorerGUI(QMainWindow):
                 rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 h, w, ch = rgb_image.shape
                 bytes_per_line = ch * w
-                q_img = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+                q_img = QImage(rgb_image.data, w, h,
+                               bytes_per_line, QImage.Format.Format_RGB888)
             else:
                 h, w = image.shape
                 bytes_per_line = w
-                q_img = QImage(image.data, w, h, bytes_per_line, QImage.Format.Format_Grayscale8)
+                q_img = QImage(image.data, w, h, bytes_per_line,
+                               QImage.Format.Format_Grayscale8)
 
             pixmap = QPixmap.fromImage(q_img)
-            
+
             scaled_pixmap = pixmap.scaled(
                 scroll_area.size() - QSize(20, 20),
                 Qt.AspectRatioMode.KeepAspectRatio,
@@ -220,8 +251,10 @@ class ImageRestorerGUI(QMainWindow):
             label.setStyleSheet("border: none; background-color: transparent;")
 
     def update_preview(self):
-        self._display_image(self.original_image, self.original_label, self.original_scroll)
-        self._display_image(self.current_image, self.restored_label, self.restored_scroll)
+        self._display_image(self.original_image,
+                            self.original_label, self.original_scroll)
+        self._display_image(self.current_image,
+                            self.restored_label, self.restored_scroll)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
