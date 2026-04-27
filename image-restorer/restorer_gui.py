@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QSlider, QSpinBox, QDoubleSpinBox
 )
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
-from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer
+from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer, pyqtSignal
 
 import restorer_processor as processor
 
@@ -95,6 +95,8 @@ class ModernButton(QPushButton):
 
 
 class ParameterWidget(QWidget):
+    valueChanged = pyqtSignal()
+
     def __init__(self, metadata, parent=None):
         super().__init__(parent)
         self.arg_name = metadata['arg']
@@ -152,6 +154,9 @@ class ParameterWidget(QWidget):
         self.spin.setFixedWidth(60)
         layout.addWidget(self.slider)
         layout.addWidget(self.spin)
+
+        self.spin.valueChanged.connect(self.valueChanged.emit)
+        self.slider.valueChanged.connect(self.valueChanged.emit)
 
     def block_and_set(self, widget, value):
         widget.blockSignals(True)
@@ -308,6 +313,7 @@ class ImageRestorerGUI(QMainWindow):
 
         # Action buttons (Apply, Reset, Cancel)
         self.action_buttons = QWidget()
+        self.action_buttons.setFixedWidth(230)
         self.action_layout = QHBoxLayout(self.action_buttons)
         self.action_layout.setContentsMargins(0, 0, 0, 0)
         self.action_layout.setSpacing(5)
@@ -388,7 +394,7 @@ class ImageRestorerGUI(QMainWindow):
 
         for m in metadata:
             pw = ParameterWidget(m)
-            pw.spin.valueChanged.connect(self.live_preview)
+            pw.valueChanged.connect(self.live_preview)
             self.control_layout.addWidget(pw)
             self.param_widgets.append(pw)
 
@@ -542,6 +548,12 @@ class ImageRestorerGUI(QMainWindow):
         super().resizeEvent(event)
         if self.current_image is not None:
             self.update_preview()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            if self.action_buttons.isVisible():
+                self.hide_top_panel()
+        super().keyPressEvent(event)
 
 
 if __name__ == "__main__":
