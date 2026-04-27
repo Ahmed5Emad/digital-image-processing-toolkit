@@ -3,47 +3,84 @@ import cv2
 import numpy as np
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QFileDialog, QFrame, QScrollArea, QSpacerItem, QSizePolicy
+    QPushButton, QLabel, QFileDialog, QFrame, QScrollArea, QSpacerItem, QSizePolicy,
+    QSlider, QSpinBox, QDoubleSpinBox
 )
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
-from PyQt6.QtCore import Qt, QSize, QCoreApplication
+from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer
 
 import restorer_processor as processor
 
 
 FILTERS_CONFIG = {
     "POINT": [
-        ("Negative", processor.negative),
-        ("Thresholding", lambda img: processor.thresholding(img, 127)),
-        ("Log Transform", processor.log_transformation),
-        ("Gamma Transform", processor.gamma_transformation),
+        ("Negative", processor.negative, []),
+        ("Thresholding", processor.thresholding, [
+            {"arg": "threshold_value", "label": "Threshold", "type": "int", "min": 0, "max": 255, "default": 127},
+            {"arg": "max_value", "label": "Max Value", "type": "int", "min": 0, "max": 255, "default": 255}
+        ]),
+        ("Log Transform", processor.log_transformation, []),
+        ("Gamma Transform", processor.gamma_transformation, [
+            {"arg": "gamma", "label": "Gamma", "type": "float", "min": 0.1, "max": 5.0, "default": 1.2}
+        ]),
     ],
     "HISTOGRAM": [
-        ("Equalization", processor.histogram_equalization),
+        ("Equalization", processor.histogram_equalization, []),
     ],
     "SMOOTHING": [
-        ("Arithmetic Mean", processor.arithmetic_mean_filter),
-        ("Geometric Mean", processor.geometric_mean_filter),
-        ("Harmonic Mean", processor.harmonic_mean_filter),
-        ("Contraharmonic Mean", processor.contraharmonic_mean_filter),
-        ("Gaussian Filter", processor.gaussian_filter),
-        ("Bilateral Filter", processor.bilateral_filter),
-        ("Box Filter", processor.box_filter),
+        ("Arithmetic Mean", processor.arithmetic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Geometric Mean", processor.geometric_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Harmonic Mean", processor.harmonic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Contraharmonic Mean", processor.contraharmonic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "Q", "label": "Q Factor", "type": "float", "min": -10.0, "max": 10.0, "default": 1.5}
+        ]),
+        ("Gaussian Filter", processor.gaussian_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 5},
+            {"arg": "sigma", "label": "Sigma", "type": "float", "min": 0.0, "max": 10.0, "default": 0.0}
+        ]),
+        ("Bilateral Filter", processor.bilateral_filter, [
+            {"arg": "d", "label": "Diameter", "type": "int", "min": 1, "max": 50, "default": 9},
+            {"arg": "sigmaColor", "label": "Sigma Color", "type": "float", "min": 1, "max": 200, "default": 75},
+            {"arg": "sigmaSpace", "label": "Sigma Space", "type": "float", "min": 1, "max": 200, "default": 75}
+        ]),
+        ("Box Filter", processor.box_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 5}
+        ]),
     ],
     "ORDER": [
-        ("Median Filter", processor.median_filter),
-        ("Min Filter", processor.min_filter),
-        ("Max Filter", processor.max_filter),
-        ("Midpoint Filter", processor.midpoint_filter),
+        ("Median Filter", processor.median_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Min Filter", processor.min_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Max Filter", processor.max_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Midpoint Filter", processor.midpoint_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
     ],
     "SHARPENING": [
-        ("Laplacian", processor.laplacian_sharpening),
-        ("Sobel", processor.sobel_sharpening),
-        ("Prewitt", processor.prewitt_sharpening),
-        ("Roberts", processor.roberts_sharpening),
+        ("Laplacian", processor.laplacian_sharpening, []),
+        ("Sobel", processor.sobel_sharpening, [
+            {"arg": "ksize", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Prewitt", processor.prewitt_sharpening, []),
+        ("Roberts", processor.roberts_sharpening, []),
     ],
     "FREQUENCY": [
-        ("Butterworth High", processor.butterworth_highpass_filter),
+        ("Butterworth High", processor.butterworth_highpass_filter, [
+            {"arg": "cutoff", "label": "Cutoff", "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "n", "label": "Order", "type": "int", "min": 1, "max": 10, "default": 2}
+        ]),
     ]
 }
 
@@ -57,6 +94,85 @@ class ModernButton(QPushButton):
                            QSizePolicy.Policy.Fixed)
 
 
+class ParameterWidget(QWidget):
+    def __init__(self, metadata, parent=None):
+        super().__init__(parent)
+        self.arg_name = metadata['arg']
+        self.type = metadata['type']
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(5, 0, 5, 0)
+        layout.setSpacing(10)
+
+        label = QLabel(metadata['label'])
+        label.setFixedWidth(100)
+        label.setStyleSheet("font-weight: bold; font-size: 12px;")
+        layout.addWidget(label)
+
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.setMinimumHeight(20)
+
+        if self.type == 'float':
+            self.spin = QDoubleSpinBox()
+            self.spin.setRange(metadata['min'], metadata['max'])
+            self.spin.setSingleStep(0.1)
+            self.spin.setValue(metadata['default'])
+
+            # Slider scaling for float (0.1 precision)
+            self.slider.setRange(int(metadata['min'] * 10),
+                                 int(metadata['max'] * 10))
+            self.slider.setValue(int(metadata['default'] * 10))
+
+            self.spin.valueChanged.connect(
+                lambda v: self.block_and_set(self.slider, int(v * 10)))
+            self.slider.valueChanged.connect(
+                lambda v: self.block_and_set(self.spin, v / 10.0))
+        else:
+            self.spin = QSpinBox()
+            self.spin.setRange(metadata['min'], metadata['max'])
+            self.spin.setValue(metadata['default'])
+
+            if self.type == 'odd':
+                self.spin.setSingleStep(2)
+                if self.spin.value() % 2 == 0:
+                    self.spin.setValue(self.spin.value() + 1)
+
+            self.slider.setRange(metadata['min'], metadata['max'])
+            self.slider.setValue(self.spin.value())
+
+            self.spin.valueChanged.connect(
+                lambda v: self.block_and_set(self.slider, v))
+            self.slider.valueChanged.connect(
+                lambda v: self.block_and_set(self.spin, v))
+
+            if self.type == 'odd':
+                self.slider.valueChanged.connect(self._ensure_odd)
+                self.spin.valueChanged.connect(self._ensure_odd)
+
+        self.spin.setFixedWidth(60)
+        layout.addWidget(self.slider)
+        layout.addWidget(self.spin)
+
+    def block_and_set(self, widget, value):
+        widget.blockSignals(True)
+        if isinstance(widget, QSpinBox) or isinstance(widget, QDoubleSpinBox):
+            widget.setValue(value)
+        else:
+            widget.setValue(int(value))
+        widget.blockSignals(False)
+
+    def _ensure_odd(self, value):
+        if value % 2 == 0:
+            new_val = value + 1
+            if new_val > self.spin.maximum():
+                new_val = value - 1
+            self.spin.setValue(new_val)
+            self.slider.setValue(new_val)
+
+    def get_value(self):
+        return self.spin.value()
+
+
 class ImageRestorerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -65,9 +181,42 @@ class ImageRestorerGUI(QMainWindow):
 
         self.original_image = None
         self.current_image = None
+        self.snapshot = None
         self.history = []
+        self.sidebar_buttons = []
+        self.active_filter_metadata = None
+        self.active_filter_func = None
+        self.active_category = None
+        self.param_widgets = []
 
+        self.preview_timer = QTimer()
+        self.preview_timer.setSingleShot(True)
+        self.preview_timer.timeout.connect(self._run_live_preview)
+
+        self.validate_config()
         self.init_ui()
+
+    def validate_config(self):
+        """Validates FILTERS_CONFIG for metadata consistency."""
+        required_keys = {"arg", "label", "type", "min", "max", "default"}
+        valid_types = {"int", "float", "odd"}
+
+        for category, filters in FILTERS_CONFIG.items():
+            for name, func, metadata in filters:
+                if not isinstance(metadata, list):
+                    print(f"Config Error: Metadata for {name} must be a list.")
+                    continue
+                for param in metadata:
+                    missing = required_keys - set(param.keys())
+                    if missing:
+                        print(f"Config Error: {name} param missing keys: {missing}")
+                        continue
+
+                    if param["type"] not in valid_types:
+                        print(f"Config Error: {name} has invalid type: {param['type']}")
+
+                    if not (param["min"] <= param["default"] <= param["max"]):
+                        print(f"Config Error: {name} default {param['default']} out of range.")
 
     def init_ui(self):
         central_widget = QWidget()
@@ -104,25 +253,28 @@ class ImageRestorerGUI(QMainWindow):
         self.btn_save.setObjectName("save_btn")
         self.btn_save.clicked.connect(self.save_image)
         header_layout.addWidget(self.btn_save)
+        self.sidebar_buttons.append(self.btn_save)
 
         self.btn_reset = ModernButton("Reset Image")
         self.btn_reset.setObjectName("reset_btn")
         self.btn_reset.clicked.connect(self.reset_image)
         header_layout.addWidget(self.btn_reset)
+        self.sidebar_buttons.append(self.btn_reset)
         sidebar_layout.addLayout(header_layout)
 
         self.btn_load = ModernButton("Load Image")
         self.btn_load.clicked.connect(self.load_image)
         sidebar_layout.addWidget(self.btn_load)
+        self.sidebar_buttons.append(self.btn_load)
 
         sidebar_layout.addSpacing(10)
 
         # Dynamic filter generation
         for category, filters in FILTERS_CONFIG.items():
             self.add_section_label(sidebar_layout, category)
-            for name, func in filters:
+            for name, func, metadata in filters:
                 self.add_filter_button(
-                    sidebar_layout, name, self._make_callback(func))
+                    sidebar_layout, name, self._make_callback(func, metadata, category))
 
         sidebar_layout.addStretch()
         sidebar_scroll.setWidget(sidebar_container)
@@ -137,18 +289,60 @@ class ImageRestorerGUI(QMainWindow):
         right_layout = QVBoxLayout(right_container)
         right_layout.setContentsMargins(0, 0, 0, 0)
 
-        top_bar = QHBoxLayout()
-        top_bar.setContentsMargins(0, 10, 10, 0)
-        top_bar.addStretch()
+        self.top_bar_widget = QFrame()
+        self.top_bar_widget.setFixedHeight(50)
+        self.top_bar_widget.setObjectName("top_bar")
+        top_bar_layout = QHBoxLayout(self.top_bar_widget)
+        top_bar_layout.setContentsMargins(10, 0, 10, 0)
+        top_bar_layout.setSpacing(10)
+
+        # Control container for parameters
+        self.control_container = QWidget()
+        self.control_layout = QHBoxLayout(self.control_container)
+        self.control_layout.setContentsMargins(0, 0, 0, 0)
+        self.control_layout.setSpacing(20)
+        self.control_container.hide()
+        top_bar_layout.addWidget(self.control_container)
+
+        top_bar_layout.addStretch()
+
+        # Action buttons (Apply, Reset, Cancel)
+        self.action_buttons = QWidget()
+        self.action_layout = QHBoxLayout(self.action_buttons)
+        self.action_layout.setContentsMargins(0, 0, 0, 0)
+        self.action_layout.setSpacing(5)
+
+        self.btn_apply = ModernButton("Apply")
+        self.btn_apply.setFixedWidth(70)
+        self.btn_apply.setFixedHeight(30)
+        self.btn_apply.setObjectName("apply_btn")
+        self.btn_apply.clicked.connect(self.apply_active_filter)
+
+        self.btn_reset_params = ModernButton("Reset")
+        self.btn_reset_params.setFixedWidth(70)
+        self.btn_reset_params.setFixedHeight(30)
+        self.btn_reset_params.setObjectName("reset_params_btn")
+        self.btn_reset_params.clicked.connect(self.reset_active_params)
+
+        self.btn_cancel = ModernButton("Cancel")
+        self.btn_cancel.setFixedWidth(70)
+        self.btn_cancel.setFixedHeight(30)
+        self.btn_cancel.setObjectName("cancel_btn")
+        self.btn_cancel.clicked.connect(self.hide_top_panel)
+
+        self.action_layout.addWidget(self.btn_apply)
+        self.action_layout.addWidget(self.btn_reset_params)
+        self.action_layout.addWidget(self.btn_cancel)
+        self.action_buttons.hide()
+        top_bar_layout.addWidget(self.action_buttons)
 
         self.btn_undo = ModernButton("⟲")
-        self.btn_undo.setStyleSheet("font-size: 24px;")
-        self.btn_undo.setFixedSize(45, 45)
+        self.btn_undo.setStyleSheet("font-size: 20px;")
+        self.btn_undo.setFixedSize(35, 35)
         self.btn_undo.clicked.connect(self.undo_last_effect)
+        top_bar_layout.addWidget(self.btn_undo)
 
-        top_bar.addWidget(self.btn_undo)
-
-        right_layout.addLayout(top_bar)
+        right_layout.addWidget(self.top_bar_widget)
 
         preview_container = QWidget()
         preview_layout = QHBoxLayout(preview_container)
@@ -174,6 +368,88 @@ class ImageRestorerGUI(QMainWindow):
         right_layout.addWidget(preview_container)
         main_layout.addWidget(right_container)
 
+    def enter_adjustment_mode(self, metadata, func, category):
+        if self.current_image is None:
+            return
+
+        self.snapshot = self.current_image.copy()
+        self.toggle_sidebar(False)
+
+        while self.control_layout.count():
+            item = self.control_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        self.active_filter_metadata = metadata
+        self.active_filter_func = func
+        self.active_category = category
+        self.param_widgets = []
+
+        for m in metadata:
+            pw = ParameterWidget(m)
+            pw.spin.valueChanged.connect(self.live_preview)
+            self.control_layout.addWidget(pw)
+            self.param_widgets.append(pw)
+
+        self.control_container.show()
+        self.action_buttons.show()
+        self.btn_undo.hide()
+        self.live_preview()
+
+    def live_preview(self):
+        if self.active_category == "FREQUENCY":
+            self.preview_timer.start(300)
+        else:
+            self._run_live_preview()
+
+    def _run_live_preview(self):
+        if self.active_filter_func and self.snapshot is not None:
+            kwargs = {pw.arg_name: pw.get_value() for pw in self.param_widgets}
+            try:
+                self.current_image = self.active_filter_func(
+                    self.snapshot.copy(), **kwargs)
+                self.update_preview()
+                self.restored_scroll.setStyleSheet("")
+            except Exception as e:
+                print(f"Live preview error: {e}")
+                self.restored_scroll.setStyleSheet("border: 2px solid red;")
+
+    def toggle_sidebar(self, enabled):
+        for btn in self.sidebar_buttons:
+            btn.setEnabled(enabled)
+
+    def apply_active_filter(self):
+        if self.active_filter_func and self.snapshot is not None:
+            self.history.append(self.snapshot)
+            self.snapshot = None
+            self.hide_top_panel()
+
+    def reset_active_params(self):
+        if self.active_filter_metadata:
+            for pw in self.param_widgets:
+                for m in self.active_filter_metadata:
+                    if m['arg'] == pw.arg_name:
+                        pw.spin.setValue(m['default'])
+                        break
+            self.live_preview()
+
+    def hide_top_panel(self):
+        if self.snapshot is not None:
+            self.current_image = self.snapshot
+            self.snapshot = None
+            self.update_preview()
+
+        self.control_container.hide()
+        self.action_buttons.hide()
+        self.btn_undo.show()
+        self.toggle_sidebar(True)
+        self.active_filter_metadata = None
+        self.active_filter_func = None
+        self.active_category = None
+        self.param_widgets = []
+        self.restored_scroll.setStyleSheet("")
+
     def add_section_label(self, layout, text):
         label = QLabel(text)
         label.setObjectName("section_label")
@@ -183,9 +459,15 @@ class ImageRestorerGUI(QMainWindow):
         btn = ModernButton(text)
         btn.clicked.connect(callback)
         layout.addWidget(btn)
+        self.sidebar_buttons.append(btn)
 
-    def _make_callback(self, func):
-        return lambda: self.apply_effect(func)
+    def _make_callback(self, func, metadata, category):
+        def callback():
+            if metadata:
+                self.enter_adjustment_mode(metadata, func, category)
+            else:
+                self.apply_effect(func)
+        return callback
 
     def load_image(self):
         file_path, _ = QFileDialog.getOpenFileName(
