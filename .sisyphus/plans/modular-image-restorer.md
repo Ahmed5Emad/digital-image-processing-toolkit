@@ -37,7 +37,7 @@ image-restorer/src/
 4. [x] Implement full `src/processors/intensity.py` including all intensity filters.
 5. [x] Implement `src/processors/spatial/smoothing.py` (Averaging, Median, Alpha-Trimmed).
 6. [x] Implement `src/processors/spatial/sharpening.py` (Laplacian, Sobel, Prewitt, Roberts).
-7. Implement `src/processors/spatial/advanced.py` (Geometric/Harmonic/Contraharmonic/Max/Min/Midpoint/Adaptive).
+7. [x] Implement `src/processors/spatial/advanced.py` (Geometric/Harmonic/Contraharmonic/Max/Min/Midpoint/Adaptive).
 8. Implement `src/processors/frequency.py` (Ideal/Butterworth/Gaussian Low/High Pass variants, Band Reject).
 9. Implement `src/processors/segmentation.py` (Point and Line detection).
 10. Update all `FILTERS_CONFIG` in `restorer_gui.py`, simplify inputs (static vs. dynamic).

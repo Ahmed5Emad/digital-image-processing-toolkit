@@ -29,3 +29,10 @@
 - Laplacian sharpening subtracts the Laplacian from the original image (assuming negative center kernel).
 - Gradient-based sharpening (Sobel, Prewitt, Roberts) adds the gradient magnitude to the original image.
 - Results are clipped to [0, 255] and converted to `uint8`.
+
+## Advanced Spatial Restoration Filters
+- Implemented geometric, harmonic, and contraharmonic mean filters in `src/processors/spatial/advanced.py`.
+- Implemented max, min, and midpoint filters using morphological operations (`cv2.dilate` and `cv2.erode`).
+- Implemented a vectorized version of the Adaptive Median Filter to avoid slow Python loops.
+- The Adaptive Median Filter dynamically increases window size from 3 up to `S_max` (default 7) based on local statistics.
+- All filters follow the `(image, **kwargs)` contract and use the `@ensure_gray` decorator.
