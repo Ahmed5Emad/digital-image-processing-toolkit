@@ -10,18 +10,22 @@ from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
 from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer, pyqtSignal
 
 import restorer_processor as processor
+from src.processors import intensity
 
 
 FILTERS_CONFIG = {
     "POINT": [
-        ("Negative", processor.negative, []),
+        ("Negative", intensity.negative, []),
         ("Thresholding", processor.thresholding, [
-            {"arg": "threshold_value", "label": "Threshold", "type": "int", "min": 0, "max": 255, "default": 127},
-            {"arg": "max_value", "label": "Max Value", "type": "int", "min": 0, "max": 255, "default": 255}
+            {"arg": "threshold_value", "label": "Threshold",
+                "type": "int", "min": 0, "max": 255, "default": 127},
+            {"arg": "max_value", "label": "Max Value",
+                "type": "int", "min": 0, "max": 255, "default": 255}
         ]),
         ("Log Transform", processor.log_transformation, []),
         ("Gamma Transform", processor.gamma_transformation, [
-            {"arg": "gamma", "label": "Gamma", "type": "float", "min": 0.1, "max": 5.0, "default": 1.2}
+            {"arg": "gamma", "label": "Gamma", "type": "float",
+                "min": 0.1, "max": 5.0, "default": 1.2}
         ]),
     ],
     "HISTOGRAM": [
@@ -29,57 +33,95 @@ FILTERS_CONFIG = {
     ],
     "SMOOTHING": [
         ("Arithmetic Mean", processor.arithmetic_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Geometric Mean", processor.geometric_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Harmonic Mean", processor.harmonic_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Contraharmonic Mean", processor.contraharmonic_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3},
-            {"arg": "Q", "label": "Q Factor", "type": "float", "min": -10.0, "max": 10.0, "default": 1.5}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "Q", "label": "Q Factor", "type": "float",
+                "min": -10.0, "max": 10.0, "default": 1.5}
         ]),
         ("Gaussian Filter", processor.gaussian_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 5},
-            {"arg": "sigma", "label": "Sigma", "type": "float", "min": 0.0, "max": 10.0, "default": 0.0}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 5},
+            {"arg": "sigma", "label": "Sigma", "type": "float",
+                "min": 0.0, "max": 10.0, "default": 0.0}
         ]),
         ("Bilateral Filter", processor.bilateral_filter, [
-            {"arg": "d", "label": "Diameter", "type": "int", "min": 1, "max": 50, "default": 9},
-            {"arg": "sigmaColor", "label": "Sigma Color", "type": "float", "min": 1, "max": 200, "default": 75},
-            {"arg": "sigmaSpace", "label": "Sigma Space", "type": "float", "min": 1, "max": 200, "default": 75}
+            {"arg": "d", "label": "Diameter", "type": "int",
+                "min": 1, "max": 50, "default": 9},
+            {"arg": "sigmaColor", "label": "Sigma Color",
+                "type": "float", "min": 1, "max": 200, "default": 75},
+            {"arg": "sigmaSpace", "label": "Sigma Space",
+                "type": "float", "min": 1, "max": 200, "default": 75}
         ]),
         ("Box Filter", processor.box_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 5}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 5}
         ]),
     ],
     "ORDER": [
         ("Median Filter", processor.median_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Min Filter", processor.min_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Max Filter", processor.max_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Midpoint Filter", processor.midpoint_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
     ],
     "SHARPENING": [
         ("Laplacian", processor.laplacian_sharpening, []),
         ("Sobel", processor.sobel_sharpening, [
-            {"arg": "ksize", "label": "Kernel Size", "type": "odd", "min": 1, "max": 31, "default": 3}
+            {"arg": "ksize", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Prewitt", processor.prewitt_sharpening, []),
         ("Roberts", processor.roberts_sharpening, []),
     ],
     "FREQUENCY": [
         ("Butterworth High", processor.butterworth_highpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int", "min": 1, "max": 200, "default": 30},
-            {"arg": "n", "label": "Order", "type": "int", "min": 1, "max": 10, "default": 2}
+            {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "n", "label": "Order", "type": "int",
+                "min": 1, "max": 10, "default": 2}
+        ]),
+        ("Ideal Band Reject", processor.ideal_band_reject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60}
+        ]),
+        ("Butterworth Band Reject", processor.butterworth_band_reject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60},
+            {"arg": "n", "label": "Order", "type": "int",
+                "min": 1, "max": 10, "default": 2}
+        ]),
+        ("Gaussian Band Reject", processor.gaussian_band_reject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60}
         ]),
     ]
 }
@@ -214,14 +256,17 @@ class ImageRestorerGUI(QMainWindow):
                 for param in metadata:
                     missing = required_keys - set(param.keys())
                     if missing:
-                        print(f"Config Error: {name} param missing keys: {missing}")
+                        print(f"Config Error: {
+                              name} param missing keys: {missing}")
                         continue
 
                     if param["type"] not in valid_types:
-                        print(f"Config Error: {name} has invalid type: {param['type']}")
+                        print(f"Config Error: {
+                              name} has invalid type: {param['type']}")
 
                     if not (param["min"] <= param["default"] <= param["max"]):
-                        print(f"Config Error: {name} default {param['default']} out of range.")
+                        print(f"Config Error: {name} default {
+                              param['default']} out of range.")
 
     def init_ui(self):
         central_widget = QWidget()
