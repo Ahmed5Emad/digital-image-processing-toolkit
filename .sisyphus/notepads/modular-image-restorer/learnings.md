@@ -36,3 +36,9 @@
 - Implemented a vectorized version of the Adaptive Median Filter to avoid slow Python loops.
 - The Adaptive Median Filter dynamically increases window size from 3 up to `S_max` (default 7) based on local statistics.
 - All filters follow the `(image, **kwargs)` contract and use the `@ensure_gray` decorator.
+
+## Frequency Domain Filters Implementation
+- Implemented Ideal, Butterworth, and Gaussian Lowpass/Highpass/Bandreject filters.
+- Used a centralized `_apply_filter` helper to handle FFT, shift, mask application, inverse shift, IFFT, and post-processing (abs, clip, uint8).
+- Followed the `(image, **params)` contract and used `@ensure_gray` for consistency with other processors.
+- Bandreject filters use $ (center frequency) and $ (bandwidth) derived from `cutoff_low` and `cutoff_high`.
