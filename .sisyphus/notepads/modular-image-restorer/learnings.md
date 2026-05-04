@@ -42,3 +42,17 @@
 - Used a centralized `_apply_filter` helper to handle FFT, shift, mask application, inverse shift, IFFT, and post-processing (abs, clip, uint8).
 - Followed the `(image, **params)` contract and used `@ensure_gray` for consistency with other processors.
 - Bandreject filters use $ (center frequency) and $ (bandwidth) derived from `cutoff_low` and `cutoff_high`.
+
+## Segmentation Filters Implementation
+- Implemented point and line detection filters in `src/processors/segmentation.py`.
+- Used `cv2.filter2D` with specific 3x3 masks for point, horizontal, vertical, +45°, and -45° line detection.
+- Applied `@ensure_gray` decorator to handle color images by converting them to grayscale before processing and back to BGR after.
+- Ensured output is absolute value, clipped to [0, 255], and cast to `uint8` for correct image representation.
+
+## GUI Integration and Modularization
+- Updated `restorer_gui.py` to fully utilize the new modular processing engine.
+- Migrated `FILTERS_CONFIG` to use functions from `intensity`, `smoothing`, `sharpening`, `advanced`, `frequency`, and `segmentation` modules.
+- Simplified the filter configuration by mapping all filters from `filters.md` to their respective categories.
+- Implemented immediate application for filters without parameters by using an empty metadata list `[]`.
+- Removed the legacy `restorer_processor` import as all functionality has been migrated to the modular structure.
+- Verified the GUI's dynamic filter generation and parameter handling with the new module structure.

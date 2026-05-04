@@ -22,16 +22,16 @@ def validate_params(params, schema):
         val = params.get(key)
         if val is None:
             continue
-        
+
         try:
             val = param_type(val)
         except (ValueError, TypeError):
             continue
-            
+
         if min_val is not None and val < min_val:
             val = min_val
         if max_val is not None and val > max_val:
             val = max_val
-            
+
         validated[key] = val
     return validated
