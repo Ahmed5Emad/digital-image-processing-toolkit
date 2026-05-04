@@ -36,7 +36,7 @@ image-restorer/src/
 3. [x] Develop PoC: Create `src/processors/intensity.py`, implement `NegativeImage`, and update `restorer_gui.py` to use the new static/dynamic input registry.
 4. [x] Implement full `src/processors/intensity.py` including all intensity filters.
 5. [x] Implement `src/processors/spatial/smoothing.py` (Averaging, Median, Alpha-Trimmed).
-6. Implement `src/processors/spatial/sharpening.py` (Laplacian, Sobel, Prewitt, Roberts).
+6. [x] Implement `src/processors/spatial/sharpening.py` (Laplacian, Sobel, Prewitt, Roberts).
 7. Implement `src/processors/spatial/advanced.py` (Geometric/Harmonic/Contraharmonic/Max/Min/Midpoint/Adaptive).
 8. Implement `src/processors/frequency.py` (Ideal/Butterworth/Gaussian Low/High Pass variants, Band Reject).
 9. Implement `src/processors/segmentation.py` (Point and Line detection).

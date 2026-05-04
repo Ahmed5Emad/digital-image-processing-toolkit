@@ -22,3 +22,10 @@
 - Used `numpy.lib.stride_tricks.sliding_window_view` for an efficient vectorized implementation of the Alpha-Trimmed Mean Filter.
 - Ensured all filters follow the `(image, **kwargs)` contract and use the `@ensure_gray` decorator.
 - Verified that `d` pixels are correctly trimmed from the sorted neighborhood in the Alpha-Trimmed Mean Filter (d/2 from each end).
+
+## Spatial Sharpening Filters
+- Implemented Laplacian, Sobel, Prewitt, and Roberts sharpening filters in `src/processors/spatial/sharpening.py`.
+- All filters use the `@ensure_gray` decorator to handle color images.
+- Laplacian sharpening subtracts the Laplacian from the original image (assuming negative center kernel).
+- Gradient-based sharpening (Sobel, Prewitt, Roberts) adds the gradient magnitude to the original image.
+- Results are clipped to [0, 255] and converted to `uint8`.
