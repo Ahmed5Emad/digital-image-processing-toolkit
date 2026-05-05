@@ -8,13 +8,13 @@ def to_grayscale(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-def add_gaussian_noise(image, mean=0, sigma=25):
+def add_gaussian_noise(image, mean=0, sigma=10):
     gauss = np.random.normal(mean, sigma, image.shape)
     noisy = image + gauss
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def add_salt_and_pepper_noise(image, amount=0.02):
+def add_salt_and_pepper_noise(image, amount=0.005):
     row, col, ch = image.shape if len(image.shape) == 3 else (*image.shape, 1)
     s_vs_p = 0.5
     out = np.copy(image)
@@ -36,7 +36,7 @@ def add_speckle_noise(image):
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def add_periodic_noise(image, amplitude=20, frequency=0.1):
+def add_periodic_noise(image, amplitude=10, frequency=0.05):
     rows, cols = image.shape[:2]
     x, y = np.meshgrid(np.arange(cols), np.arange(rows))
     noise = amplitude * np.sin(2 * np.pi * frequency * (x + y))
@@ -46,23 +46,23 @@ def add_periodic_noise(image, amplitude=20, frequency=0.1):
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def add_uniform_noise(image, low=-50, high=50):
+def add_uniform_noise(image, low=-20, high=20):
     noise = np.random.uniform(low, high, image.shape)
     noisy = image + noise
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def add_rayleigh_noise(image, scale=25):
+def add_rayleigh_noise(image, scale=10):
     noise = np.random.rayleigh(scale, image.shape)
     noisy = image + noise
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def add_exponential_noise(image, scale=1.0):
+def add_exponential_noise(image, scale=0.5):
     noise = np.random.exponential(scale, image.shape)
     noisy = image + noise
     return np.clip(noisy, 0, 255).astype(np.uint8)
 
 
-def apply_blur(image, kernel_size=15):
+def apply_blur(image, kernel_size=5):
     return cv2.blur(image, (kernel_size, kernel_size))

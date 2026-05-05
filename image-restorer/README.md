@@ -3,13 +3,13 @@
 This document explains the codebase for the Image Restorer tool.
 
 ## restorer_gui.py
-- **`FILTERS_CONFIG`**: A dictionary that maps filter categories (e.g., "POINT", "SMOOTHING") to a list of tuples. Each tuple contains the display name and the reference to the corresponding processing function in `restorer_processor.py`. This structure allows for dynamic GUI generation.
+- **`FILTERS_CONFIG`**: A dictionary that maps filter categories (e.g., "POINT", "SMOOTHING") to a list of tuples. Each tuple contains the display name and the reference to the corresponding processing function in `src/processors/`. This structure allows for dynamic GUI generation.
 - **`ImageRestorerGUI` class**: The main controller for the application.
   - **`init_ui`**: Initializes the layout and dynamically iterates over `FILTERS_CONFIG` to construct the sidebar with labeled sections and filter buttons.
   - **`_make_callback`**: A helper method that creates a proper closure for each filter button, ensuring the correct function is called when clicked, bypassing Python lambda scoping issues.
   - **`update_preview` / `_display_image`**: Manages the side-by-side display. `_display_image` is a reusable method to convert NumPy arrays to `QPixmap` and display them in a specified `QLabel`. `update_preview` calls this twice to update both the original and restored image displays.
 
-## restorer_processor.py
+## src/processors/
 This module contains the logic for image restoration using `numpy` and `cv2`.
 - **`ensure_gray` decorator**: A higher-order function that wraps image processing functions. It detects if an image is color (3 channels), converts it to grayscale, applies the function, and then converts the result back to BGR (if applicable), ensuring algorithms that only support grayscale work seamlessly on color images.
 - **Filter Functions**:

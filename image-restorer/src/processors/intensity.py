@@ -1,20 +1,16 @@
 import cv2
 import numpy as np
-from .utils import ensure_gray
 
 
-@ensure_gray
 def negative(image, **kwargs):
     return cv2.bitwise_not(image)
 
 
-@ensure_gray
 def thresholding(image, threshold_value=127, max_value=255, **kwargs):
     _, thresh = cv2.threshold(image, threshold_value, max_value, cv2.THRESH_BINARY)
     return thresh
 
 
-@ensure_gray
 def log_transformation(image, **kwargs):
     image_f = image.astype(np.float32)
     max_val = np.max(image_f)
@@ -25,7 +21,6 @@ def log_transformation(image, **kwargs):
     return np.clip(log_image, 0, 255).astype(np.uint8)
 
 
-@ensure_gray
 def inverse_log_transformation(image, **kwargs):
     image_f = image.astype(np.float32)
     image_norm = image_f / 255.0
@@ -34,7 +29,6 @@ def inverse_log_transformation(image, **kwargs):
     return np.clip(inv_log_image, 0, 255).astype(np.uint8)
 
 
-@ensure_gray
 def gamma_transformation(image, gamma=1.2, **kwargs):
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255
@@ -42,7 +36,6 @@ def gamma_transformation(image, gamma=1.2, **kwargs):
     return cv2.LUT(image, table)
 
 
-@ensure_gray
 def contrast_stretching(image, r1=0, s1=0, r2=255, s2=255, **kwargs):
     image_f = image.astype(np.float32)
     output = np.zeros_like(image_f)
@@ -68,7 +61,6 @@ def contrast_stretching(image, r1=0, s1=0, r2=255, s2=255, **kwargs):
     return np.clip(output, 0, 255).astype(np.uint8)
 
 
-@ensure_gray
 def gray_level_slicing(image, r1=100, r2=200, highlight_value=255, preserve_others=True, **kwargs):
     output = image.copy()
     mask = (image >= r1) & (image <= r2)
@@ -80,11 +72,9 @@ def gray_level_slicing(image, r1=100, r2=200, highlight_value=255, preserve_othe
     return output
 
 
-@ensure_gray
 def bit_plane_slicing(image, plane=7, **kwargs):
     return ((image >> plane) & 1) * 255
 
 
-@ensure_gray
 def histogram_equalization(image, **kwargs):
     return cv2.equalizeHist(image)

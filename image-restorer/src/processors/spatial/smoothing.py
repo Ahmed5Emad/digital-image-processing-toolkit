@@ -1,18 +1,14 @@
 import cv2
 import numpy as np
-from ..utils import ensure_gray
 
-@ensure_gray
 def arithmetic_mean_filter(image, kernel_size=3, **kwargs):
     kernel_size = int(kernel_size)
     return cv2.blur(image, (kernel_size, kernel_size))
 
-@ensure_gray
 def median_filter(image, kernel_size=3, **kwargs):
     kernel_size = int(kernel_size)
     return cv2.medianBlur(image, kernel_size)
 
-@ensure_gray
 def alpha_trimmed_mean_filter(image, kernel_size=3, d=2, **kwargs):
     kernel_size = int(kernel_size)
     d = int(d)

@@ -4,13 +4,14 @@ import numpy as np
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QFrame, QScrollArea, QSpacerItem, QSizePolicy,
-    QSlider, QSpinBox, QDoubleSpinBox
+    QSlider, QSpinBox, QDoubleSpinBox, QComboBox
 )
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
 from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer, pyqtSignal
 
 from src.processors import intensity, frequency, segmentation
 from src.processors.spatial import smoothing, sharpening, advanced
+from src.processors.utils import ensure_gray
 
 
 FILTERS_CONFIG = {
@@ -69,13 +70,24 @@ FILTERS_CONFIG = {
         ]),
     ],
     "SHARPENING": [
-        ("Laplacian", sharpening.laplacian_sharpening, []),
+        ("Laplacian", sharpening.laplacian_sharpening, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Subtract (-)"}
+        ]),
         ("Sobel", sharpening.sobel_sharpening, [
             {"arg": "ksize", "label": "Kernel Size",
-                "type": "odd", "min": 1, "max": 31, "default": 3}
+                "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
         ]),
-        ("Prewitt", sharpening.prewitt_sharpening, []),
-        ("Roberts", sharpening.roberts_sharpening, []),
+        ("Prewitt", sharpening.prewitt_sharpening, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Roberts", sharpening.roberts_sharpening, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
     ],
     "ADVANCED RESTORATION": [
         ("Geometric Mean", advanced.geometric_mean_filter, [
@@ -126,17 +138,23 @@ FILTERS_CONFIG = {
         ]),
         ("Ideal Highpass", frequency.ideal_highpass_filter, [
             {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30}
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
         ]),
         ("Butterworth Highpass", frequency.butterworth_highpass_filter, [
             {"arg": "cutoff", "label": "Cutoff", "type": "int",
                 "min": 1, "max": 200, "default": 30},
             {"arg": "n", "label": "Order", "type": "int",
-                "min": 1, "max": 10, "default": 2}
+                "min": 1, "max": 10, "default": 2},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
         ]),
         ("Gaussian Highpass", frequency.gaussian_highpass_filter, [
             {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30}
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
         ]),
         ("Ideal Bandreject", frequency.ideal_bandreject_filter, [
             {"arg": "cutoff_low", "label": "Cutoff Low",
@@ -160,11 +178,26 @@ FILTERS_CONFIG = {
         ]),
     ],
     "SEGMENTATION": [
-        ("Point Detection", segmentation.point_detection, []),
-        ("Line Detection (H)", segmentation.line_detection_horizontal, []),
-        ("Line Detection (V)", segmentation.line_detection_vertical, []),
-        ("Line Detection (+45)", segmentation.line_detection_pos_45, []),
-        ("Line Detection (-45)", segmentation.line_detection_neg_45, []),
+        ("Point Detection", segmentation.point_detection, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (H)", segmentation.line_detection_horizontal, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (V)", segmentation.line_detection_vertical, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (+45)", segmentation.line_detection_pos_45, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (-45)", segmentation.line_detection_neg_45, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
     ]
 }
 
@@ -194,6 +227,15 @@ class ParameterWidget(QWidget):
         label.setFixedWidth(100)
         label.setStyleSheet("font-weight: bold; font-size: 12px;")
         layout.addWidget(label)
+
+        if self.type == 'choice':
+            self.combo = QComboBox()
+            for choice in metadata['choices']:
+                self.combo.addItem(choice)
+            self.combo.setCurrentText(metadata['default'])
+            self.combo.currentTextChanged.connect(self.valueChanged.emit)
+            layout.addWidget(self.combo)
+            return
 
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setMinimumHeight(20)
@@ -259,6 +301,8 @@ class ParameterWidget(QWidget):
             self.slider.setValue(new_val)
 
     def get_value(self):
+        if self.type == 'choice':
+            return self.combo.currentText()
         return self.spin.value()
 
 
@@ -287,8 +331,9 @@ class ImageRestorerGUI(QMainWindow):
 
     def validate_config(self):
         """Validates FILTERS_CONFIG for metadata consistency."""
-        required_keys = {"arg", "label", "type", "min", "max", "default"}
-        valid_types = {"int", "float", "odd"}
+        required_numeric_keys = {"arg", "label", "type", "min", "max", "default"}
+        required_choice_keys = {"arg", "label", "type", "choices", "default"}
+        valid_types = {"int", "float", "odd", "choice"}
 
         for category, filters in FILTERS_CONFIG.items():
             for name, func, metadata in filters:
@@ -296,19 +341,21 @@ class ImageRestorerGUI(QMainWindow):
                     print(f"Config Error: Metadata for {name} must be a list.")
                     continue
                 for param in metadata:
-                    missing = required_keys - set(param.keys())
+                    if param.get("type") == "choice":
+                        missing = required_choice_keys - set(param.keys())
+                    else:
+                        missing = required_numeric_keys - set(param.keys())
+
                     if missing:
-                        print(f"Config Error: {
-                              name} param missing keys: {missing}")
+                        print(f"Config Error: {name} param missing keys: {missing}")
                         continue
 
                     if param["type"] not in valid_types:
-                        print(f"Config Error: {
-                              name} has invalid type: {param['type']}")
+                        print(f"Config Error: {name} has invalid type: {param['type']}")
 
-                    if not (param["min"] <= param["default"] <= param["max"]):
-                        print(f"Config Error: {name} default {
-                              param['default']} out of range.")
+                    if param["type"] != "choice":
+                        if not (param["min"] <= param["default"] <= param["max"]):
+                            print(f"Config Error: {name} default {param['default']} out of range.")
 
     def init_ui(self):
         central_widget = QWidget()
@@ -509,6 +556,8 @@ class ImageRestorerGUI(QMainWindow):
                 self.restored_scroll.setStyleSheet("border: 2px solid red;")
 
     def toggle_sidebar(self, enabled):
+        if not enabled:
+            self.setFocus()
         for btn in self.sidebar_buttons:
             btn.setEnabled(enabled)
 
@@ -523,7 +572,10 @@ class ImageRestorerGUI(QMainWindow):
             for pw in self.param_widgets:
                 for m in self.active_filter_metadata:
                     if m['arg'] == pw.arg_name:
-                        pw.spin.setValue(m['default'])
+                        if pw.type == 'choice':
+                            pw.combo.setCurrentText(m['default'])
+                        else:
+                            pw.spin.setValue(m['default'])
                         break
             self.live_preview()
 
@@ -555,11 +607,12 @@ class ImageRestorerGUI(QMainWindow):
         self.sidebar_buttons.append(btn)
 
     def _make_callback(self, func, metadata, category):
+        wrapped_func = ensure_gray(func)
         def callback():
             if metadata:
-                self.enter_adjustment_mode(metadata, func, category)
+                self.enter_adjustment_mode(metadata, wrapped_func, category)
             else:
-                self.apply_effect(func)
+                self.apply_effect(wrapped_func)
         return callback
 
     def load_image(self):

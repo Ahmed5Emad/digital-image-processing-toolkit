@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import ensure_gray
+from .utils import apply_blend
 
 
 def _get_distance_matrix(rows, cols):
@@ -20,7 +20,6 @@ def _apply_filter(image, mask):
     return np.clip(img_back, 0, 255).astype(np.uint8)
 
 
-@ensure_gray
 def ideal_lowpass_filter(image, cutoff=30, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
@@ -29,7 +28,6 @@ def ideal_lowpass_filter(image, cutoff=30, **kwargs):
     return _apply_filter(image, mask)
 
 
-@ensure_gray
 def butterworth_lowpass_filter(image, cutoff=30, n=2, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
@@ -37,7 +35,6 @@ def butterworth_lowpass_filter(image, cutoff=30, n=2, **kwargs):
     return _apply_filter(image, mask)
 
 
-@ensure_gray
 def gaussian_lowpass_filter(image, cutoff=30, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
@@ -45,32 +42,31 @@ def gaussian_lowpass_filter(image, cutoff=30, **kwargs):
     return _apply_filter(image, mask)
 
 
-@ensure_gray
-def ideal_highpass_filter(image, cutoff=30, **kwargs):
+def ideal_highpass_filter(image, cutoff=30, blend_mode="Add (+)", **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
     mask = np.ones((rows, cols))
     mask[D <= cutoff] = 0
-    return _apply_filter(image, mask)
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
 
 
-@ensure_gray
-def butterworth_highpass_filter(image, cutoff=30, n=2, **kwargs):
+def butterworth_highpass_filter(image, cutoff=30, n=2, blend_mode="Add (+)", **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
     mask = 1 / (1 + (cutoff / (D + 1e-6))**(2 * n))
-    return _apply_filter(image, mask)
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
 
 
-@ensure_gray
-def gaussian_highpass_filter(image, cutoff=30, **kwargs):
+def gaussian_highpass_filter(image, cutoff=30, blend_mode="Add (+)", **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
     mask = 1 - np.exp(-(D**2) / (2 * (cutoff**2) + 1e-6))
-    return _apply_filter(image, mask)
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
 
 
-@ensure_gray
 def ideal_bandreject_filter(image, cutoff_low=30, cutoff_high=60, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
@@ -79,7 +75,6 @@ def ideal_bandreject_filter(image, cutoff_low=30, cutoff_high=60, **kwargs):
     return _apply_filter(image, mask)
 
 
-@ensure_gray
 def butterworth_bandreject_filter(image, cutoff_low=30, cutoff_high=60, n=2, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)
@@ -89,7 +84,6 @@ def butterworth_bandreject_filter(image, cutoff_low=30, cutoff_high=60, n=2, **k
     return _apply_filter(image, mask)
 
 
-@ensure_gray
 def gaussian_bandreject_filter(image, cutoff_low=30, cutoff_high=60, **kwargs):
     rows, cols = image.shape
     D = _get_distance_matrix(rows, cols)

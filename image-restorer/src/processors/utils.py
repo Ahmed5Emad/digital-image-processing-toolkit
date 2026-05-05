@@ -3,6 +3,18 @@ import numpy as np
 from functools import wraps
 
 
+def apply_blend(image, edges, blend_mode):
+    if blend_mode == "Edges Only":
+        return edges
+    elif blend_mode == "Add (+)":
+        blended = image.astype(np.float64) + edges.astype(np.float64)
+        return np.clip(blended, 0, 255).astype(np.uint8)
+    elif blend_mode == "Subtract (-)":
+        blended = image.astype(np.float64) - edges.astype(np.float64)
+        return np.clip(blended, 0, 255).astype(np.uint8)
+    return edges
+
+
 def ensure_gray(func):
     @wraps(func)
     def wrapper(image, *args, **kwargs):

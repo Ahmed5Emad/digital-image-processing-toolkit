@@ -1,43 +1,35 @@
 import cv2
 import numpy as np
-from ..utils import ensure_gray
 
-@ensure_gray
 def geometric_mean_filter(image, kernel_size=3, **kwargs):
     image_f = image.astype(np.float32) + 1e-6
     log_image = np.log(image_f)
     mean_log = cv2.blur(log_image, (kernel_size, kernel_size))
     return np.exp(mean_log).astype(np.uint8)
 
-@ensure_gray
 def harmonic_mean_filter(image, kernel_size=3, **kwargs):
     image_f = image.astype(np.float32) + 1e-6
     inv_image = 1.0 / image_f
     mean_inv = cv2.blur(inv_image, (kernel_size, kernel_size))
     return np.clip(1.0 / (mean_inv + 1e-6), 0, 255).astype(np.uint8)
 
-@ensure_gray
 def contraharmonic_mean_filter(image, kernel_size=3, Q=1.5, **kwargs):
     image_f = image.astype(np.float32) + 1e-6
     num = cv2.blur(np.power(image_f, Q + 1), (kernel_size, kernel_size))
     den = cv2.blur(np.power(image_f, Q), (kernel_size, kernel_size))
     return np.clip(num / (den + 1e-6), 0, 255).astype(np.uint8)
 
-@ensure_gray
 def max_filter(image, kernel_size=3, **kwargs):
     return cv2.dilate(image, np.ones((kernel_size, kernel_size), np.uint8))
 
-@ensure_gray
 def min_filter(image, kernel_size=3, **kwargs):
     return cv2.erode(image, np.ones((kernel_size, kernel_size), np.uint8))
 
-@ensure_gray
 def midpoint_filter(image, kernel_size=3, **kwargs):
     min_f = cv2.erode(image, np.ones((kernel_size, kernel_size), np.uint8))
     max_f = cv2.dilate(image, np.ones((kernel_size, kernel_size), np.uint8))
     return ((min_f.astype(np.float32) + max_f.astype(np.float32)) / 2).astype(np.uint8)
 
-@ensure_gray
 def adaptive_median_filter(image, S_max=7, **kwargs):
     rows, cols = image.shape
     output = image.copy()
