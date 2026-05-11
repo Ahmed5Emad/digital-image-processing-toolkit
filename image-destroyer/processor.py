@@ -2,67 +2,79 @@ import cv2
 import numpy as np
 
 
+RNG = np.random.default_rng()
+
+
+def clip_uint8(image):
+    return np.clip(image, 0, 255).astype(np.uint8)
+
+
 def to_grayscale(image):
     if len(image.shape) == 2:
-        return image
+        return image.copy()
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 def add_gaussian_noise(image, mean=0, sigma=10):
-    gauss = np.random.normal(mean, sigma, image.shape)
-    noisy = image + gauss
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+    noise = RNG.normal(mean, sigma, image.shape)
+    return clip_uint8(image.astype(np.float32) + noise)
 
 
-def add_salt_and_pepper_noise(image, amount=0.005):
-    row, col, ch = image.shape if len(image.shape) == 3 else (*image.shape, 1)
-    s_vs_p = 0.5
-    out = np.copy(image)
+def add_salt_and_pepper_noise(image, amount=0.005, s_vs_p=0.5):
+    amount = float(np.clip(amount, 0, 1))
+    s_vs_p = float(np.clip(s_vs_p, 0, 1))
 
-    num_salt = np.ceil(amount * image.size * s_vs_p)
-    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in image.shape]
-    out[tuple(coords)] = 255
+    out = image.copy()
+    rows, cols = image.shape[:2]
+    pixel_count = rows * cols
 
-    num_pepper = np.ceil(amount * image.size * (1. - s_vs_p))
-    coords = [np.random.randint(0, i - 1, int(num_pepper))
-              for i in image.shape]
-    out[tuple(coords)] = 0
+    num_salt = int(np.ceil(amount * pixel_count * s_vs_p))
+    salt_rows = RNG.integers(0, rows, num_salt)
+    salt_cols = RNG.integers(0, cols, num_salt)
+    out[salt_rows, salt_cols] = 255
+
+    num_pepper = int(np.ceil(amount * pixel_count * (1 - s_vs_p)))
+    pepper_rows = RNG.integers(0, rows, num_pepper)
+    pepper_cols = RNG.integers(0, cols, num_pepper)
+    out[pepper_rows, pepper_cols] = 0
+
     return out
 
 
-def add_speckle_noise(image):
-    gauss = np.random.randn(*image.shape)
-    noisy = image + image * gauss
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+def add_speckle_noise(image, strength=0.2):
+    noise = RNG.normal(0, strength, image.shape)
+    noisy = image.astype(np.float32) + image.astype(np.float32) * noise
+    return clip_uint8(noisy)
 
 
 def add_periodic_noise(image, amplitude=10, frequency=0.05):
     rows, cols = image.shape[:2]
     x, y = np.meshgrid(np.arange(cols), np.arange(rows))
     noise = amplitude * np.sin(2 * np.pi * frequency * (x + y))
+
     if len(image.shape) == 3:
-        noise = np.stack([noise]*3, axis=-1)
-    noisy = image + noise
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+        noise = np.repeat(noise[:, :, np.newaxis], image.shape[2], axis=2)
+
+    return clip_uint8(image.astype(np.float32) + noise)
 
 
 def add_uniform_noise(image, low=-20, high=20):
-    noise = np.random.uniform(low, high, image.shape)
-    noisy = image + noise
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+    noise = RNG.uniform(low, high, image.shape)
+    return clip_uint8(image.astype(np.float32) + noise)
 
 
 def add_rayleigh_noise(image, scale=10):
-    noise = np.random.rayleigh(scale, image.shape)
-    noisy = image + noise
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+    raw_noise = RNG.rayleigh(scale, image.shape)
+    centered_noise = raw_noise - scale * np.sqrt(np.pi / 2)
+    return clip_uint8(image.astype(np.float32) + centered_noise)
 
 
-def add_exponential_noise(image, scale=0.5):
-    noise = np.random.exponential(scale, image.shape)
-    noisy = image + noise
-    return np.clip(noisy, 0, 255).astype(np.uint8)
+def add_exponential_noise(image, scale=10):
+    raw_noise = RNG.exponential(scale, image.shape)
+    centered_noise = raw_noise - scale
+    return clip_uint8(image.astype(np.float32) + centered_noise)
 
 
 def apply_blur(image, kernel_size=5):
+    kernel_size = max(1, int(kernel_size))
     return cv2.blur(image, (kernel_size, kernel_size))

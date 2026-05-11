@@ -1,6 +1,5 @@
 import sys
 import cv2
-import numpy as np
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QFrame, QScrollArea, QSpacerItem, QSizePolicy,
@@ -9,7 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
 from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer, pyqtSignal
 
-from src.processors import intensity, frequency, segmentation
+from src.processors import intensity, frequency
 from src.processors.spatial import smoothing, sharpening, advanced
 from src.processors.utils import ensure_gray
 
@@ -62,12 +61,6 @@ FILTERS_CONFIG = {
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
-        ("Alpha-Trimmed Mean", smoothing.alpha_trimmed_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size",
-                "type": "odd", "min": 1, "max": 31, "default": 3},
-            {"arg": "d", "label": "d", "type": "int",
-                "min": 0, "max": 30, "default": 2}
-        ]),
     ],
     "SHARPENING": [
         ("Laplacian", sharpening.laplacian_sharpening, [
@@ -77,14 +70,6 @@ FILTERS_CONFIG = {
         ("Sobel", sharpening.sobel_sharpening, [
             {"arg": "ksize", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3},
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
-        ]),
-        ("Prewitt", sharpening.prewitt_sharpening, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
-        ]),
-        ("Roberts", sharpening.roberts_sharpening, [
             {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
              "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
         ]),
@@ -98,15 +83,9 @@ FILTERS_CONFIG = {
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
-        ("Contraharmonic Mean", advanced.contraharmonic_mean_filter, [
-            {"arg": "kernel_size", "label": "Kernel Size",
-                "type": "odd", "min": 1, "max": 31, "default": 3},
-            {"arg": "Q", "label": "Q Factor", "type": "float",
-                "min": -10.0, "max": 10.0, "default": 1.5}
-        ]),
         ("Max", advanced.max_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
-                "type": "odd", "min": 1, "max": 31, "default": 3}
+             "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
         ("Min", advanced.min_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
@@ -115,10 +94,6 @@ FILTERS_CONFIG = {
         ("Midpoint", advanced.midpoint_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
-        ]),
-        ("Adaptive Median", advanced.adaptive_median_filter, [
-            {"arg": "S_max", "label": "S Max", "type": "int",
-                "min": 3, "max": 31, "default": 7}
         ]),
     ],
     "FREQUENCY": [
@@ -191,33 +166,6 @@ FILTERS_CONFIG = {
                 ]),
             ]
         },
-    ],
-    "SEGMENTATION": [
-        ("Point Detection", segmentation.point_detection, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-        ]),
-        {
-            "group": "Line Detection",
-            "filters": [
-                ("Horizontal", segmentation.line_detection_horizontal, [
-                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-                ]),
-                ("Vertical", segmentation.line_detection_vertical, [
-                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-                ]),
-                ("+45°", segmentation.line_detection_pos_45, [
-                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-                ]),
-                ("-45°", segmentation.line_detection_neg_45, [
-                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-                ]),
-            ]
-        }
     ]
 }
 
@@ -678,6 +626,7 @@ class ImageRestorerGUI(QMainWindow):
 
     def _make_callback(self, func, metadata, category):
         wrapped_func = ensure_gray(func)
+
         def callback():
             if metadata:
                 self.enter_adjustment_mode(metadata, wrapped_func, category)
