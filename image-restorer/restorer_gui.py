@@ -122,82 +122,102 @@ FILTERS_CONFIG = {
         ]),
     ],
     "FREQUENCY": [
-        ("Ideal Lowpass", frequency.ideal_lowpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30}
-        ]),
-        ("Butterworth Lowpass", frequency.butterworth_lowpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30},
-            {"arg": "n", "label": "Order", "type": "int",
-                "min": 1, "max": 10, "default": 2}
-        ]),
-        ("Gaussian Lowpass", frequency.gaussian_lowpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30}
-        ]),
-        ("Ideal Highpass", frequency.ideal_highpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30},
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
-        ]),
-        ("Butterworth Highpass", frequency.butterworth_highpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30},
-            {"arg": "n", "label": "Order", "type": "int",
-                "min": 1, "max": 10, "default": 2},
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
-        ]),
-        ("Gaussian Highpass", frequency.gaussian_highpass_filter, [
-            {"arg": "cutoff", "label": "Cutoff", "type": "int",
-                "min": 1, "max": 200, "default": 30},
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
-        ]),
-        ("Ideal Bandreject", frequency.ideal_bandreject_filter, [
-            {"arg": "cutoff_low", "label": "Cutoff Low",
-                "type": "int", "min": 1, "max": 200, "default": 30},
-            {"arg": "cutoff_high", "label": "Cutoff High",
-                "type": "int", "min": 1, "max": 200, "default": 60}
-        ]),
-        ("Butterworth Bandreject", frequency.butterworth_bandreject_filter, [
-            {"arg": "cutoff_low", "label": "Cutoff Low",
-                "type": "int", "min": 1, "max": 200, "default": 30},
-            {"arg": "cutoff_high", "label": "Cutoff High",
-                "type": "int", "min": 1, "max": 200, "default": 60},
-            {"arg": "n", "label": "Order", "type": "int",
-                "min": 1, "max": 10, "default": 2}
-        ]),
-        ("Gaussian Bandreject", frequency.gaussian_bandreject_filter, [
-            {"arg": "cutoff_low", "label": "Cutoff Low",
-                "type": "int", "min": 1, "max": 200, "default": 30},
-            {"arg": "cutoff_high", "label": "Cutoff High",
-                "type": "int", "min": 1, "max": 200, "default": 60}
-        ]),
+        {
+            "group": "Ideal",
+            "filters": [
+                ("Lowpass", frequency.ideal_lowpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30}
+                ]),
+                ("Highpass", frequency.ideal_highpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30},
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+                ]),
+                ("Bandreject", frequency.ideal_bandreject_filter, [
+                    {"arg": "cutoff_low", "label": "Cutoff Low",
+                        "type": "int", "min": 1, "max": 200, "default": 30},
+                    {"arg": "cutoff_high", "label": "Cutoff High",
+                        "type": "int", "min": 1, "max": 200, "default": 60}
+                ]),
+            ]
+        },
+        {
+            "group": "Butterworth",
+            "filters": [
+                ("Lowpass", frequency.butterworth_lowpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30},
+                    {"arg": "n", "label": "Order", "type": "int",
+                        "min": 1, "max": 10, "default": 2}
+                ]),
+                ("Highpass", frequency.butterworth_highpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30},
+                    {"arg": "n", "label": "Order", "type": "int",
+                        "min": 1, "max": 10, "default": 2},
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+                ]),
+                ("Bandreject", frequency.butterworth_bandreject_filter, [
+                    {"arg": "cutoff_low", "label": "Cutoff Low",
+                        "type": "int", "min": 1, "max": 200, "default": 30},
+                    {"arg": "cutoff_high", "label": "Cutoff High",
+                        "type": "int", "min": 1, "max": 200, "default": 60},
+                    {"arg": "n", "label": "Order", "type": "int",
+                        "min": 1, "max": 10, "default": 2}
+                ]),
+            ]
+        },
+        {
+            "group": "Gaussian",
+            "filters": [
+                ("Lowpass", frequency.gaussian_lowpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30}
+                ]),
+                ("Highpass", frequency.gaussian_highpass_filter, [
+                    {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                        "min": 1, "max": 200, "default": 30},
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+                ]),
+                ("Bandreject", frequency.gaussian_bandreject_filter, [
+                    {"arg": "cutoff_low", "label": "Cutoff Low",
+                        "type": "int", "min": 1, "max": 200, "default": 30},
+                    {"arg": "cutoff_high", "label": "Cutoff High",
+                        "type": "int", "min": 1, "max": 200, "default": 60}
+                ]),
+            ]
+        },
     ],
     "SEGMENTATION": [
         ("Point Detection", segmentation.point_detection, [
             {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
              "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
         ]),
-        ("Line Detection (H)", segmentation.line_detection_horizontal, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-        ]),
-        ("Line Detection (V)", segmentation.line_detection_vertical, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-        ]),
-        ("Line Detection (+45)", segmentation.line_detection_pos_45, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-        ]),
-        ("Line Detection (-45)", segmentation.line_detection_neg_45, [
-            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
-             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
-        ]),
+        {
+            "group": "Line Detection",
+            "filters": [
+                ("Horizontal", segmentation.line_detection_horizontal, [
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+                ]),
+                ("Vertical", segmentation.line_detection_vertical, [
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+                ]),
+                ("+45°", segmentation.line_detection_pos_45, [
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+                ]),
+                ("-45°", segmentation.line_detection_neg_45, [
+                    {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+                     "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+                ]),
+            ]
+        }
     ]
 }
 
@@ -335,27 +355,40 @@ class ImageRestorerGUI(QMainWindow):
         required_choice_keys = {"arg", "label", "type", "choices", "default"}
         valid_types = {"int", "float", "odd", "choice"}
 
-        for category, filters in FILTERS_CONFIG.items():
-            for name, func, metadata in filters:
-                if not isinstance(metadata, list):
-                    print(f"Config Error: Metadata for {name} must be a list.")
+        def validate_filter(name, func, metadata):
+            if not isinstance(metadata, list):
+                print(f"Config Error: Metadata for {name} must be a list.")
+                return
+            for param in metadata:
+                if param.get("type") == "choice":
+                    missing = required_choice_keys - set(param.keys())
+                else:
+                    missing = required_numeric_keys - set(param.keys())
+
+                if missing:
+                    print(f"Config Error: {name} param missing keys: {missing}")
                     continue
-                for param in metadata:
-                    if param.get("type") == "choice":
-                        missing = required_choice_keys - set(param.keys())
-                    else:
-                        missing = required_numeric_keys - set(param.keys())
 
-                    if missing:
-                        print(f"Config Error: {name} param missing keys: {missing}")
+                if param["type"] not in valid_types:
+                    print(f"Config Error: {name} has invalid type: {param['type']}")
+
+                if param["type"] != "choice":
+                    if not (param["min"] <= param["default"] <= param["max"]):
+                        print(f"Config Error: {name} default {param['default']} out of range.")
+
+        for category, items in FILTERS_CONFIG.items():
+            for item in items:
+                if isinstance(item, dict):
+                    group_label = item.get("group")
+                    filters = item.get("filters")
+                    if not group_label or not filters:
+                        print(f"Config Error: Group in {category} missing 'group' or 'filters'.")
                         continue
-
-                    if param["type"] not in valid_types:
-                        print(f"Config Error: {name} has invalid type: {param['type']}")
-
-                    if param["type"] != "choice":
-                        if not (param["min"] <= param["default"] <= param["max"]):
-                            print(f"Config Error: {name} default {param['default']} out of range.")
+                    for name, func, metadata in filters:
+                        validate_filter(f"{group_label} -> {name}", func, metadata)
+                else:
+                    name, func, metadata = item
+                    validate_filter(name, func, metadata)
 
     def init_ui(self):
         central_widget = QWidget()
@@ -409,11 +442,16 @@ class ImageRestorerGUI(QMainWindow):
         sidebar_layout.addSpacing(10)
 
         # Dynamic filter generation
-        for category, filters in FILTERS_CONFIG.items():
+        for category, items in FILTERS_CONFIG.items():
             self.add_section_label(sidebar_layout, category)
-            for name, func, metadata in filters:
-                self.add_filter_button(
-                    sidebar_layout, name, self._make_callback(func, metadata, category))
+            for item in items:
+                if isinstance(item, dict):
+                    self.add_grouped_filter(
+                        sidebar_layout, item["group"], item["filters"], category)
+                else:
+                    name, func, metadata = item
+                    self.add_filter_button(
+                        sidebar_layout, name, self._make_callback(func, metadata, category))
 
         sidebar_layout.addStretch()
         sidebar_scroll.setWidget(sidebar_container)
@@ -508,22 +546,48 @@ class ImageRestorerGUI(QMainWindow):
         right_layout.addWidget(preview_container)
         main_layout.addWidget(right_container)
 
-    def enter_adjustment_mode(self, metadata, func, category):
+    def enter_adjustment_mode(self, metadata, func, category, group_filters=None):
         if self.current_image is None:
             return
 
         self.snapshot = self.current_image.copy()
         self.toggle_sidebar(False)
+        self.active_category = category
 
         while self.control_layout.count():
             item = self.control_layout.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+        self.param_widgets = []
 
-        self.active_filter_metadata = metadata
+        if group_filters:
+            variant_combo = QComboBox()
+            variant_combo.setFixedWidth(150)
+            for name, f, m in group_filters:
+                variant_combo.addItem(name)
+
+            variant_combo.currentIndexChanged.connect(
+                lambda idx: self._rebuild_params(
+                    group_filters[idx][1], group_filters[idx][2])
+            )
+            self.control_layout.addWidget(variant_combo)
+
+            self._rebuild_params(group_filters[0][1], group_filters[0][2])
+        else:
+            self._rebuild_params(func, metadata)
+
+        self.control_container.show()
+        self.action_buttons.show()
+        self.btn_undo.hide()
+
+    def _rebuild_params(self, func, metadata):
         self.active_filter_func = func
-        self.active_category = category
+        self.active_filter_metadata = metadata
+
+        for pw in self.param_widgets:
+            self.control_layout.removeWidget(pw)
+            pw.deleteLater()
         self.param_widgets = []
 
         for m in metadata:
@@ -532,9 +596,6 @@ class ImageRestorerGUI(QMainWindow):
             self.control_layout.addWidget(pw)
             self.param_widgets.append(pw)
 
-        self.control_container.show()
-        self.action_buttons.show()
-        self.btn_undo.hide()
         self.live_preview()
 
     def live_preview(self):
@@ -603,6 +664,15 @@ class ImageRestorerGUI(QMainWindow):
     def add_filter_button(self, layout, text, callback):
         btn = ModernButton(text)
         btn.clicked.connect(callback)
+        layout.addWidget(btn)
+        self.sidebar_buttons.append(btn)
+
+    def add_grouped_filter(self, layout, group_label, filters, category):
+        wrapped_filters = [(name, ensure_gray(func), metadata)
+                           for name, func, metadata in filters]
+        btn = ModernButton(group_label)
+        btn.clicked.connect(lambda: self.enter_adjustment_mode(
+            None, None, category, group_filters=wrapped_filters))
         layout.addWidget(btn)
         self.sidebar_buttons.append(btn)
 

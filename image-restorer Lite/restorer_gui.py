@@ -9,8 +9,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPalette
 from PyQt6.QtCore import Qt, QSize, QCoreApplication, QTimer, pyqtSignal
 
-from src.processors import intensity, frequency
-from src.processors.spatial import smoothing, sharpening
+from src.processors import intensity, frequency, segmentation
+from src.processors.spatial import smoothing, sharpening, advanced
 from src.processors.utils import ensure_gray
 
 
@@ -24,9 +24,20 @@ FILTERS_CONFIG = {
                 "type": "int", "min": 0, "max": 255, "default": 255}
         ]),
         ("Log", intensity.log_transformation, []),
+        ("Inverse Log", intensity.inverse_log_transformation, []),
         ("Gamma", intensity.gamma_transformation, [
             {"arg": "gamma", "label": "Gamma", "type": "float",
                 "min": 0.1, "max": 5.0, "default": 1.2}
+        ]),
+        ("Contrast Stretching", intensity.contrast_stretching, [
+            {"arg": "r1", "label": "r1", "type": "int",
+                "min": 0, "max": 255, "default": 0},
+            {"arg": "s1", "label": "s1", "type": "int",
+                "min": 0, "max": 255, "default": 0},
+            {"arg": "r2", "label": "r2", "type": "int",
+                "min": 0, "max": 255, "default": 255},
+            {"arg": "s2", "label": "s2", "type": "int",
+                "min": 0, "max": 255, "default": 255}
         ]),
         ("Gray Level Slicing", intensity.gray_level_slicing, [
             {"arg": "r1", "label": "r1", "type": "int",
@@ -39,6 +50,9 @@ FILTERS_CONFIG = {
                 "min": 0, "max": 7, "default": 7}
         ]),
     ],
+    "HISTOGRAM": [
+        ("Equalization", intensity.histogram_equalization, []),
+    ],
     "SMOOTHING": [
         ("Arithmetic Mean", smoothing.arithmetic_mean_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
@@ -47,6 +61,12 @@ FILTERS_CONFIG = {
         ("Median", smoothing.median_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Alpha-Trimmed Mean", smoothing.alpha_trimmed_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "d", "label": "d", "type": "int",
+                "min": 0, "max": 30, "default": 2}
         ]),
     ],
     "SHARPENING": [
@@ -59,6 +79,46 @@ FILTERS_CONFIG = {
                 "type": "odd", "min": 1, "max": 31, "default": 3},
             {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
              "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Prewitt", sharpening.prewitt_sharpening, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Roberts", sharpening.roberts_sharpening, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+    ],
+    "ADVANCED RESTORATION": [
+        ("Geometric Mean", advanced.geometric_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Harmonic Mean", advanced.harmonic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Contraharmonic Mean", advanced.contraharmonic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "Q", "label": "Q Factor", "type": "float",
+                "min": -10.0, "max": 10.0, "default": 1.5}
+        ]),
+        ("Max", advanced.max_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Min", advanced.min_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Midpoint", advanced.midpoint_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Adaptive Median", advanced.adaptive_median_filter, [
+            {"arg": "S_max", "label": "S Max", "type": "int",
+                "min": 3, "max": 31, "default": 7}
         ]),
     ],
     "FREQUENCY": [
@@ -76,7 +136,69 @@ FILTERS_CONFIG = {
             {"arg": "cutoff", "label": "Cutoff", "type": "int",
                 "min": 1, "max": 200, "default": 30}
         ]),
+        ("Ideal Highpass", frequency.ideal_highpass_filter, [
+            {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Butterworth Highpass", frequency.butterworth_highpass_filter, [
+            {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "n", "label": "Order", "type": "int",
+                "min": 1, "max": 10, "default": 2},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Gaussian Highpass", frequency.gaussian_highpass_filter, [
+            {"arg": "cutoff", "label": "Cutoff", "type": "int",
+                "min": 1, "max": 200, "default": 30},
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Add (+)"}
+        ]),
+        ("Ideal Bandreject", frequency.ideal_bandreject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60}
+        ]),
+        ("Butterworth Bandreject", frequency.butterworth_bandreject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60},
+            {"arg": "n", "label": "Order", "type": "int",
+                "min": 1, "max": 10, "default": 2}
+        ]),
+        ("Gaussian Bandreject", frequency.gaussian_bandreject_filter, [
+            {"arg": "cutoff_low", "label": "Cutoff Low",
+                "type": "int", "min": 1, "max": 200, "default": 30},
+            {"arg": "cutoff_high", "label": "Cutoff High",
+                "type": "int", "min": 1, "max": 200, "default": 60}
+        ]),
     ],
+    "SEGMENTATION": [
+        ("Point Detection", segmentation.point_detection, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (H)", segmentation.line_detection_horizontal, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (V)", segmentation.line_detection_vertical, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (+45)", segmentation.line_detection_pos_45, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+        ("Line Detection (-45)", segmentation.line_detection_neg_45, [
+            {"arg": "blend_mode", "label": "Blend Mode", "type": "choice",
+             "choices": ["Edges Only", "Add (+)", "Subtract (-)"], "default": "Edges Only"}
+        ]),
+    ]
 }
 
 

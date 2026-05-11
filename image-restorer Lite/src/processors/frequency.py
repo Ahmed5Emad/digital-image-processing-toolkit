@@ -40,3 +40,54 @@ def gaussian_lowpass_filter(image, cutoff=30, **kwargs):
     D = _get_distance_matrix(rows, cols)
     mask = np.exp(-(D**2) / (2 * (cutoff**2) + 1e-6))
     return _apply_filter(image, mask)
+
+
+def ideal_highpass_filter(image, cutoff=30, blend_mode="Add (+)", **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    mask = np.ones((rows, cols))
+    mask[D <= cutoff] = 0
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
+
+
+def butterworth_highpass_filter(image, cutoff=30, n=2, blend_mode="Add (+)", **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    mask = 1 / (1 + (cutoff / (D + 1e-6))**(2 * n))
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
+
+
+def gaussian_highpass_filter(image, cutoff=30, blend_mode="Add (+)", **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    mask = 1 - np.exp(-(D**2) / (2 * (cutoff**2) + 1e-6))
+    edges = _apply_filter(image, mask)
+    return apply_blend(image, edges, blend_mode)
+
+
+def ideal_bandreject_filter(image, cutoff_low=30, cutoff_high=60, **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    mask = np.ones((rows, cols))
+    mask[(D >= cutoff_low) & (D <= cutoff_high)] = 0
+    return _apply_filter(image, mask)
+
+
+def butterworth_bandreject_filter(image, cutoff_low=30, cutoff_high=60, n=2, **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    D0 = (cutoff_low + cutoff_high) / 2
+    W = cutoff_high - cutoff_low
+    mask = 1 / (1 + ((D * W) / (D**2 - D0**2 + 1e-6))**(2 * n))
+    return _apply_filter(image, mask)
+
+
+def gaussian_bandreject_filter(image, cutoff_low=30, cutoff_high=60, **kwargs):
+    rows, cols = image.shape
+    D = _get_distance_matrix(rows, cols)
+    D0 = (cutoff_low + cutoff_high) / 2
+    W = cutoff_high - cutoff_low
+    mask = 1 - np.exp(-((D**2 - D0**2) / (D * W + 1e-6))**2)
+    return _apply_filter(image, mask)
