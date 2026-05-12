@@ -83,6 +83,12 @@ FILTERS_CONFIG = {
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
         ]),
+        ("Contraharmonic Mean", advanced.contraharmonic_mean_filter, [
+            {"arg": "kernel_size", "label": "Kernel Size",
+                "type": "odd", "min": 1, "max": 31, "default": 3},
+            {"arg": "Q", "label": "Q Factor", "type": "float",
+                "min": -10.0, "max": 10.0, "default": 1.5}
+        ]),
         ("Max", advanced.max_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
              "type": "odd", "min": 1, "max": 31, "default": 3}
@@ -94,6 +100,10 @@ FILTERS_CONFIG = {
         ("Midpoint", advanced.midpoint_filter, [
             {"arg": "kernel_size", "label": "Kernel Size",
                 "type": "odd", "min": 1, "max": 31, "default": 3}
+        ]),
+        ("Adaptive Median", advanced.adaptive_median_filter, [
+            {"arg": "S_max", "label": "S Max", "type": "int",
+                "min": 3, "max": 31, "default": 7}
         ]),
     ],
     "FREQUENCY": [
